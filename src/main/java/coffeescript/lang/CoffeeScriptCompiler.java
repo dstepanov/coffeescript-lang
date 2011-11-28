@@ -1,0 +1,69 @@
+// Copyright 2011 Denis Stepanov
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package coffeescript.lang;
+
+/**
+ *
+ * @author Denis Stepanov
+ */
+public interface CoffeeScriptCompiler {
+
+    public CompilerResult compile(String code, boolean bare);
+
+    public static class CompilerResult {
+
+        private String js;
+        private Error error;
+
+        public CompilerResult(String js) {
+            this.js = js;
+        }
+
+        public CompilerResult(Error error) {
+            this.error = error;
+        }
+
+        public String getJs() {
+            return js;
+        }
+
+        public Error getError() {
+            return error;
+        }
+    }
+
+    public static class Error {
+
+        private final int line;
+        private final String errorName, message;
+
+        public Error(int line, String errorName, String message) {
+            this.line = line;
+            this.errorName = errorName;
+            this.message = message;
+        }
+
+        public int getLine() {
+            return line;
+        }
+
+        public String getErrorName() {
+            return errorName;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+}
