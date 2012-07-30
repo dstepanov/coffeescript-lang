@@ -6,15 +6,16 @@ package coffeescript.lang;
  */
 public interface CoffeeScriptLexerInput {
 
-	public static final int EOF = -1;
+    public static final int EOF = -1;
 
-	int read();
+    int read();
 
-	void backup(int b);
+    void backup(int b);
 
-	String readText();
+    String readText();
 
-	int readLength();
+    int readLength();
 
-	void setTokenOffset();
+    void setTokenOffset();
+    
 }

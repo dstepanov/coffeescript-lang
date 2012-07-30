@@ -14,8 +14,8 @@
 
 package coffeescript.lang;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.LinkedList;
 
 /**
  * 
@@ -30,115 +30,127 @@ public abstract class CoffeeScriptLexerBase<T> {
 	}
 
 	public final T nextToken() {
-            	input.setTokenOffset();
+          input.setTokenOffset();
 		T token = getNextToken();
 		return token;
 	}
 
-	public abstract T getNextToken();
+	protected abstract T getNextToken();
 
 	protected boolean balancedString(String last) {
-		while (true) {
-			if (inputMatch(last)) {
-				return true;
-			}
-			int c = input.read();
-			if (c == '\\') {
-				c = input.read();
-			} else if (c == CoffeeScriptLexerInput.EOF) {
-				return false;
-			}
-		}
-	}
+        while (true) {
+            if (inputMatch(last)) {
+                return true;
+            }
+            int c = input.read();
+            if (c == '\\') {
+                c = input.read();
+            } else if (c == CoffeeScriptLexerInput.EOF) {
+                return false;
+            }
+        }
+    }
 
-	protected boolean balancedInterpolatedString(String last) {
-		Deque<Character> stack = new LinkedList<Character>();
-		while (true) {
-			if (stack.isEmpty() && inputMatch(last)) {
-				return true;
-			}
-			boolean canBeInterpolated = stack.isEmpty() || !stack.isEmpty() && stack.element() == '"';
-			boolean inInterpolation = stack.isEmpty() && last.endsWith("}") || !stack.isEmpty() && stack.element() == '}';
-			int c = input.read();
-			if (!stack.isEmpty() && stack.element() == c) {
-				stack.poll();
-			} else if (canBeInterpolated && c == '#' && inputMatch("{")) {
-				stack.push('}');
-			} else if (inInterpolation && (c == '"' || c == '\'' || c == '{')) {
-				stack.push(c == '{' ? '}' : (char) c);
-			} else if (c == '\\') {
-				c = input.read();
-			} else if (c == CoffeeScriptLexerInput.EOF) {
-				return false;
-			}
-		}
-	}
+    protected boolean balancedInterpolatedString(String last) {
+        Deque<Character> stack = new ArrayDeque<Character>();
+        while (true) {
+            if (stack.isEmpty() && inputMatch(last)) {
+                return true;
+            }
+            boolean canBeInterpolated = stack.isEmpty() || !stack.isEmpty() && stack.element() == '"';
+            boolean inInterpolation = stack.isEmpty() && last.endsWith("}") || !stack.isEmpty() && stack.element() == '}';
+            int c = input.read();
+            if (!stack.isEmpty() && stack.element() == c) {
+                stack.poll();
+            } else if (canBeInterpolated && c == '#' && inputMatch("{")) {
+                stack.push('}');
+            } else if (inInterpolation && (c == '"' || c == '\'' || c == '{')) {
+                stack.push(c == '{' ? '}' : (char) c);
+            } else if (c == '\\') {
+                c = input.read();
+            } else if (c == CoffeeScriptLexerInput.EOF) {
+                return false;
+            }
+        }
+    }
 
-	protected boolean balancedRegex() {
-		Deque<Character> stack = new LinkedList<Character>();
-		while (true) {
-			int c = input.read();
-			if (stack.isEmpty() && c == '/') {
-				return true;
-			}
-			if (!stack.isEmpty() && stack.element() == c) {
-				stack.poll();
-			} else if (c == '[') {
-				stack.push(']');
-			} else if (stack.isEmpty() && c == '\\') {
-				// We don't need to escape things in square braces
-				c = input.read();
-			} else if (c == '\n' || c == CoffeeScriptLexerInput.EOF) {
-				return false;
-			}
-		}
-	}
+    protected boolean balancedRegex() {
+        Deque<Character> stack = new ArrayDeque<Character>();
+        while (true) {
+            int c = input.read();
+            if (stack.isEmpty() && c == '/') {
+                return true;
+            }
+            if (!stack.isEmpty() && stack.element() == c) {
+                stack.poll();
+            } else if (c == '[') {
+                stack.push(']');
+            } else if (stack.isEmpty() && c == '\\') {
+                // We don't need to escape things in square braces
+                c = input.read();
+            } else if (c == '\n') {
+                input.backup(1);
+                return false;
+            } else if (c == CoffeeScriptLexerInput.EOF) {
+                return false;
+            }
+        }
+    }
 
-	protected boolean balancedJSToken() {
-		Deque<Character> stack = new LinkedList<Character>();
-		while (true) {
-			int c = input.read();
-			if (stack.isEmpty() && c == '`') {
-				return true;
-			}
-			if (!stack.isEmpty() && stack.element() == c) {
-				stack.poll();
-			} else if (c == '"' || c == '\'') {
-				stack.push((char) c);
-			} else if (c == '\\') {
-				c = input.read();
-			} else if (c == CoffeeScriptLexerInput.EOF) {
-				return false;
-			}
-		}
-	}
+    protected boolean balancedJSToken() {
+        Deque<Character> stack = new ArrayDeque<Character>();
+        while (true) {
+            int c = input.read();
+            if (stack.isEmpty() && c == '`') {
+                return true;
+            }
+            if (!stack.isEmpty() && stack.element() == c) {
+                stack.poll();
+            } else if (c == '"' || c == '\'') {
+                stack.push((char) c);
+            } else if (c == '\\') {
+                c = input.read();
+            } else if (c == CoffeeScriptLexerInput.EOF) {
+                return false;
+            }
+        }
+    }
 
-	protected T token(T token) {
-		return token;
-	}
+    protected T token(T token) {
+	return token;
+    }
 
-	protected boolean inputNotMatch(String string) {
-		int readChars = 0;
-		for (char c : string.toCharArray()) {
-			readChars++;
-			if (input.read() != c) {
-				input.backup(readChars);
-				return true;
-			}
-		}
-		input.backup(readChars);
-		return false;
-	}
+    protected boolean inputNotMatch(String string) {
+        int readChars = 0;
+        for (char c : string.toCharArray()) {
+            readChars++;
+            if (input.read() != c) {
+                input.backup(readChars);
+                return true;
+            }
+        }
+        input.backup(readChars);
+        return false;
+    }
 
-	protected boolean inputMatch(String string) {
-		int readChars = 0;
-		for (char c : string.toCharArray()) {
-			readChars++;
-			if (input.read() != c) {
-				input.backup(readChars);
-				return false;
-			}
-		}
-		return true;
-	}
+    protected boolean inputMatch(String string) {
+        int readChars = 0;
+        for (char c : string.toCharArray()) {
+            readChars++;
+            if (input.read() != c) {
+                input.backup(readChars);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected boolean inputMatch(char c) {
+        if (input.read() != c) {
+            input.backup(1);
+            return false;
+        }
+        return true;
+    }
+
 }

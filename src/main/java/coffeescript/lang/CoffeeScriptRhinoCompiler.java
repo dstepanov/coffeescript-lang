@@ -13,11 +13,9 @@
 // limitations under the License.
 package coffeescript.lang;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -35,6 +33,8 @@ import org.mozilla.javascript.ScriptableObject;
  */
 public class CoffeeScriptRhinoCompiler implements CoffeeScriptCompiler {
 
+    private final static String COFFEESCRIPT_JS_PATH = "coffeescript/lang/resources/coffee-script.js";
+    
     private final Map<String, Script> scriptCacheMap = new HashMap<String, Script>(1);
     private static CoffeeScriptRhinoCompiler INSTANCE;
 
@@ -51,7 +51,7 @@ public class CoffeeScriptRhinoCompiler implements CoffeeScriptCompiler {
     public CompilerResult compile(String code, boolean bare) {
         try {
             return new CompilerResult(compileCode(code, bare));
-        } catch (StoppedContextException e) {
+        } catch (CoffeeScriptRhinoCompiler.StoppedContextException e) {
             return null; // Canceled
         } catch (JavaScriptException e) {
             if (e.getValue() instanceof IdScriptableObject) {
@@ -70,12 +70,12 @@ public class CoffeeScriptRhinoCompiler implements CoffeeScriptCompiler {
 
     private String compileCode(String code, boolean bare) {
         Context.enter();
-        Context ctx = new StoppableContext();
+        Context ctx = new CoffeeScriptRhinoCompiler.StoppableContext();
         try {
             ctx.setInstructionObserverThreshold(1);
             ctx.setOptimizationLevel(-1);
             Scriptable scope = ctx.newObject(ctx.initStandardObjects());
-            getScriptFromClasspath("coffeescript/lang/resources/coffee-script.js").exec(ctx, scope);
+            getScriptFromClasspath(COFFEESCRIPT_JS_PATH).exec(ctx, scope);
             scope.put("code", scope, code);
             String options = String.format("{bare: %b}", bare);
             String script = String.format("CoffeeScript.compile(code, %s);", options);
@@ -90,9 +90,9 @@ public class CoffeeScriptRhinoCompiler implements CoffeeScriptCompiler {
         try {
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(url);
             return getScriptFromReader(url, new InputStreamReader(inputStream, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-        } // Ignore
-        return null;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Script getScriptFromReader(String key, Reader reader) {
@@ -103,8 +103,8 @@ public class CoffeeScriptRhinoCompiler implements CoffeeScriptCompiler {
                 try {
                     ctx.setOptimizationLevel(-1);
                     script = ctx.compileReader(reader, "", 0, null);
-                } catch (IOException e) {
-                    throw new RuntimeException("Cannot compile from reader", e);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 } finally {
                     Context.exit();
                 }
@@ -123,7 +123,7 @@ public class CoffeeScriptRhinoCompiler implements CoffeeScriptCompiler {
                     ctx.setOptimizationLevel(-1);
                     script = ctx.compileString(string, "", 0, null);
                 } catch (Exception e) {
-                    throw new RuntimeException("Cannot compile from string", e);
+                    throw new RuntimeException(e);
                 } finally {
                     Context.exit();
                 }
@@ -138,7 +138,7 @@ public class CoffeeScriptRhinoCompiler implements CoffeeScriptCompiler {
         @Override
         protected void observeInstructionCount(int instructionCount) {
             if (Thread.interrupted()) {
-                throw new StoppedContextException();
+                throw new CoffeeScriptRhinoCompiler.StoppedContextException();
             }
         }
     }

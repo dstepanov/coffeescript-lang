@@ -33,6 +33,8 @@ public enum CoffeeScriptTokenId {
     JSTOKEN(null, STRING_CAT),
     BOOL(null, KEYWORD_CAT),
     WHITESPACE(null, WHITESPACE_CAT),
+    INDENT(null, WHITESPACE_CAT),
+    OUTDENT(null, WHITESPACE_CAT),
     EOL(null, WHITESPACE_CAT),
     COMMENT(null, COMMENT_CAT),
     LPAREN("(", SEPARATOR_CAT),
@@ -43,7 +45,9 @@ public enum CoffeeScriptTokenId {
     RBRACKET("]", SEPARATOR_CAT),
     ANY_KEYWORD(null, KEYWORD_CAT),
     ANY_OPERATOR(null, OPERATOR_CAT),
-    DOT(null, OPERATOR_CAT),
+    QM("?", OPERATOR_CAT),
+    DOT(".", OPERATOR_CAT),
+    QDOT("?.", OPERATOR_CAT),
     THIS("this", KEYWORD_CAT),
     FOR("for", KEYWORD_CAT),
     IF("if", KEYWORD_CAT),
@@ -54,12 +58,14 @@ public enum CoffeeScriptTokenId {
     BREAK("break", KEYWORD_CAT),
     SWITCH("switch", KEYWORD_CAT),
     COLON(":", OPERATOR_CAT),
+    DOUBLE_COLON("::", OPERATOR_CAT),
     SEMI(";", OPERATOR_CAT),
     FIELD(null, FIELD_CAT),
     NONUNARY_OP(null, OPERATOR_CAT),
     DIV("/", OPERATOR_CAT),
     INC("++", OPERATOR_CAT),
-    DEC("--", OPERATOR_CAT);
+    DEC("--", OPERATOR_CAT),
+    AT("@", KEYWORD_CAT);
     //
     private final String fixedText;
     private final Category category;

@@ -3519,6 +3519,10 @@ public class ScriptRuntime {
      */
     public static String getMessage(String messageId, Object[] arguments)
     {
+        if(true) {
+            return "";//Disable messages
+        }
+        
         final String defaultResource
             = "org.mozilla.nb.javascript.resources.Messages";
 
